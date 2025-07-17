@@ -21,6 +21,9 @@ const Login = () => {
         setMsg("✅ Berhasil Login");
         setForm({ email: "", password: "" });
       }
+      if (!result.success) {
+        setMsg(" Gagal login email atau password salah");
+      }
     } catch (error) {
       setMsg("❌ Gagal: " + result.error);
     }

@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
       const uploaded = await storage.createFile(AVATAR_ID, ID.unique(), credentials.photoFile);
 
       // Dapatkan URL foto
-      const photoUrl = `https://cloud.appwrite.io/v1/storage/buckets/${AVATAR_ID}/files/${uploaded.$id}/preview?project=${PROJECT_ID}&mode=admin`;
+      const photoUrl = `https://fra.cloud.appwrite.io/v1/storage/buckets/${AVATAR_ID}/files/${uploaded.$id}/view?project=${PROJECT_ID}&mode=admin`;
 
       // Simpan data tambahan user ke koleksi `users`
       await databases.createDocument(DATABASES_ID, USER_ID, userId, {
