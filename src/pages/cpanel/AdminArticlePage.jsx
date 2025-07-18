@@ -122,7 +122,7 @@ export default function AdminArticlePage() {
   const modules = useMemo(
     () => ({
       toolbar: {
-        container: [[{ header: [1, 2, false] }], ["bold", "italic", "underline", "strike"], [{ list: "ordered" }, { list: "bullet" }], ["link", "image"]],
+        container: [[{ header: [1, 2, false] }], ["bold", "italic", "underline", "strike"], [{ list: "ordered" }, { list: "bullet" }], ["link", "image"], ["clean"]],
         handlers: {
           image: imageHandler,
         },
@@ -140,8 +140,6 @@ export default function AdminArticlePage() {
       });
   }, [articles, search, filterDate, sortAsc]);
 
-  console.log(filterDate);
-  console.log(articles?.[0]?.$createdAt);
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="flex justify-between items-center mb-6">

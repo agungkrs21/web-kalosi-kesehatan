@@ -1,1 +1,54 @@
 @import "tailwindcss";
+
+.article-content {
+  color: #1f2937; /* gray-800 */
+}
+
+.article-content p,
+.article-content li,
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  text-align: justify;
+  color: #6a7077; /* optional: pastikan semua tag dapat warna */
+  margin-bottom: 0.55rem; /* jarak antar baris */
+  line-height: 1.75rem; /* opsional: biar lebih enak dibaca */
+}
+
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.article-content a {
+  color: #2563eb;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  color: #1d4ed8;
+}
+
+.article-content ol {
+  list-style-type: decimal;
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+}
+
+.article-content ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}

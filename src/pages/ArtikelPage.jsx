@@ -1,17 +1,7 @@
 // pages/ArtikelPage.jsx
 import ArticleCard from "../components/ArticleCard";
 import { useState, useEffect } from "react";
-import { databases, storage, DATABASES_ID, ARTIKEL_ID, AVATAR_ID } from "../lib/appwrite";
-const dummyArticles = [
-  {
-    title: "Cegah Diabetes Sejak Dini",
-    image: "https://via.placeholder.com/600x350",
-    date: "18 Juli 2025",
-    excerpt: "Diabetes bisa dicegah dengan kebiasaan sehat. Simak langkah-langkahnya...",
-    slug: "cegah-diabetes-sejak-dini",
-  },
-  // Tambah artikel lain
-];
+import { databases, DATABASES_ID, ARTIKEL_ID } from "../lib/appwrite";
 
 export default function ArtikelPage() {
   const [artikels, setAtikel] = useState([]);
@@ -29,7 +19,7 @@ export default function ArtikelPage() {
     getInitialArtikel();
   }, []);
   return (
-    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
       {artikels.map((article) => (
         <ArticleCard
           key={generateSlug(article.title)}
