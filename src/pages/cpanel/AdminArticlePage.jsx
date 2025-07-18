@@ -1,37 +1,28 @@
 // AdminArticlePage.jsx
-import { useEffect, useState, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
-import { databases, DATABASES_ID, ARTIKEL_ID } from "../../lib/appwrite";
+import { databases, storage, DATABASES_ID, ARTIKEL_ID, AVATAR_ID, PROJECT_ID } from "../../lib/appwrite";
 import { ID } from "appwrite";
-
-const dummyArticles = [
-  {
-    title: "Pentingnya Cuci Tangan dengan Sabun",
-    content: "Cuci tangan yang benar dapat mencegah penyebaran penyakit menular...",
-    date: "2025-07-17T09:00:00.000Z",
-  },
-  {
-    title: "Cara Mengelola Stres di Tengah Kesibukan",
-    content: "Mengelola stres penting untuk kesehatan mental...",
-    date: "2025-07-16T15:30:00.000Z",
-  },
-  {
-    title: "Bahaya Gula Berlebih bagi Kesehatan",
-    content: "Konsumsi gula berlebihan meningkatkan risiko diabetes dan obesitas...",
-    date: "2025-07-15T08:45:00.000Z",
-  },
-];
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function AdminArticlePage() {
   const [articles, setArticles] = useState([]);
-  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ title: "", content: "" });
-  const [search, setSearch] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [pendingImages, setPendingImages] = useState([]);
+
+  // quill editor reff
+  const quilAddllRef = useRef(null);
+  const quilEditRef = useRef(null);
 
   const fetchArticles = async () => {
     try {
-      const res = await databases.listDocuments(DATABASE_ID, ARTICLE_COLLECTION_ID);
+      const res = await databases.listDocuments(DATABASES_ID, ARTIKEL_ID);
       setArticles(res.documents);
     } catch (err) {
       console.error("Gagal mengambil artikel:", err);
@@ -40,41 +31,96 @@ export default function AdminArticlePage() {
 
   useEffect(() => {
     fetchArticles();
-    setArticles((prev) => [...prev, ...dummyArticles]);
   }, []);
 
   const handleDelete = async (id) => {
     try {
-      await databases.deleteDocument(DATABASE_ID, ARTICLE_COLLECTION_ID, id);
+      await databases.deleteDocument(DATABASES_ID, ARTIKEL_ID, id);
       fetchArticles();
     } catch (err) {
-      console.error("Gagal menghapus artikel:", err);
+      console.error("Gagal menghapus:", err);
     }
   };
 
-  const handleSave = async () => {
-    if (!formData.title || !formData.content) return;
+  const handleEdit = (item) => {
+    setEditingId(item.$id);
+    setEditTitle(item.title);
+    setEditContent(item.content);
+  };
+
+  const handleEditSave = async () => {
     try {
-      if (editingId) {
-        await databases.updateDocument(DATABASE_ID, ARTICLE_COLLECTION_ID, editingId, formData);
-      } else {
-        await databases.createDocument(DATABASE_ID, ARTICLE_COLLECTION_ID, ID.unique(), {
-          ...formData,
-          date: new Date().toISOString(),
-        });
-      }
-      setFormData({ title: "", content: "" });
+      await databases.updateDocument(DATABASES_ID, ARTIKEL_ID, editingId, {
+        title: editTitle,
+        content: editContent,
+      });
       setEditingId(null);
-      setShowForm(false);
       fetchArticles();
     } catch (err) {
-      console.error("Gagal menyimpan artikel:", err);
+      console.error("Gagal mengedit:", err);
     }
   };
 
-  const filteredArticles = useMemo(() => {
-    return articles.filter((a) => a.title.toLowerCase().includes(search.toLowerCase()));
-  }, [articles, search]);
+  const handleAddArticle = async () => {
+    if (!newTitle.trim() || !newContent.trim()) return;
+    try {
+      let finalContent = newContent;
+      if (finalContent.length > 7000) throw Error("artikel terlalu panjang!!");
+      for (const item of pendingImages) {
+        const uploaded = await storage.createFile(AVATAR_ID, ID.unique(), item.file);
+
+        const url = `https://fra.cloud.appwrite.io/v1/storage/buckets/${AVATAR_ID}/files/${uploaded.$id}/view?project=${PROJECT_ID}&mode=admin`;
+
+        finalContent = finalContent.replace(item.placeholder, url);
+      }
+
+      await databases.createDocument(DATABASES_ID, ARTIKEL_ID, ID.unique(), {
+        title: newTitle,
+        content: finalContent,
+      });
+      setNewTitle("");
+      setNewContent("");
+      setPendingImages([]);
+      setShowAddForm(false);
+      fetchArticles();
+    } catch (err) {
+      console.error("Gagal menambah:", err);
+    }
+  };
+
+  const imageHandler = () => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result;
+        const quill = editingId !== null ? quilEditRef.current?.getEditor() : quilAddllRef.current?.getEditor();
+        const range = quill.getSelection(true);
+        quill.insertEmbed(range.index, "image", base64);
+        setPendingImages((prev) => [...prev, { file, placeholder: base64 }]);
+      };
+      reader.readAsDataURL(file);
+    };
+  };
+
+  const modules = useMemo(
+    () => ({
+      toolbar: {
+        container: [[{ header: [1, 2, false] }], ["bold", "italic", "underline", "strike"], [{ list: "ordered" }, { list: "bullet" }], ["link", "image"]],
+        handlers: {
+          image: imageHandler,
+        },
+      },
+    }),
+    [editingId]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -82,52 +128,107 @@ export default function AdminArticlePage() {
         <h1 className="text-2xl font-bold">Kelola Artikel Edukasi</h1>
         <button
           onClick={() => {
-            setShowForm(!showForm);
-            setEditingId(null);
-            setFormData({ title: "", content: "" });
+            setShowAddForm((prev) => !prev);
+            setPendingImages((prev) => (prev = []));
+            setNewContent((prev) => (prev = ""));
           }}
           className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
         >
-          <FiPlus /> {showForm ? "Tutup" : "Tambah Artikel"}
+          <FiPlus /> {showAddForm ? "Bersihkan" : "Tambah Artikel"}
         </button>
       </div>
 
-      {showForm && (
-        <div className="bg-white p-4 rounded shadow space-y-3 mb-6">
-          <input className="w-full border px-2 py-1 rounded" placeholder="Judul Artikel" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
-          <textarea className="w-full border px-2 py-1 rounded h-32" placeholder="Isi Artikel" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} />
-          <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            Simpan
+      {showAddForm && (
+        <div className="mb-6 bg-white p-4 rounded shadow space-y-4">
+          <h2 className="text-lg font-semibold">Tambah Artikel Baru</h2>
+          <strong className="text-gray-400">Max Character Arikel : 6700</strong>
+          <br />
+          <strong className={countArikelLength(newContent, pendingImages) > 7000 ? "text-red-400" : "text-gray-400"}>Artikel Character : {countArikelLength(newContent, pendingImages)}</strong> <br />
+          <input className="w-full border px-2 py-1 rounded" placeholder="Judul Artikel" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
+          <ReactQuill ref={quilAddllRef} theme="snow" value={newContent} onChange={setNewContent} modules={modules} />
+          <button onClick={handleAddArticle} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Simpan Artikel
           </button>
         </div>
       )}
 
-      <input type="text" placeholder="Cari artikel..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full max-w-sm mb-4 px-4 py-2 border rounded" />
+      {/* mapping artikle */}
+      <div className="space-y-6">
+        {articles.map((item) => {
+          const isEditing = editingId === item.$id;
 
-      <div className="space-y-4">
-        {filteredArticles.map((article) => (
-          <div key={article.$id} className="bg-white border rounded p-4 shadow">
-            <h2 className="text-lg font-semibold mb-2">{article.title}</h2>
-            <p className="text-gray-700 mb-2">{article.content}</p>
-            <p className="text-sm text-gray-500 mb-2">{new Date(article.date).toLocaleDateString("id-ID")}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setEditingId(article.$id);
-                  setFormData({ title: article.title, content: article.content });
-                  setShowForm(true);
-                }}
-                className="flex items-center gap-1 text-yellow-500 hover:text-yellow-600"
-              >
-                <FiEdit2 /> Edit
-              </button>
-              <button onClick={() => handleDelete(article.$id)} className="flex items-center gap-1 text-red-500 hover:text-red-600">
-                <FiTrash2 /> Hapus
-              </button>
+          return (
+            <div key={item.$id} className="bg-white p-4 rounded shadow cursor-pointer transition-all duration-300">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold mb-1">{item.title}</h2>
+                  <p className="text-sm text-gray-500 mb-2">Tanggal: {new Date(item.$createdAt).toLocaleDateString("id-ID")}</p>
+                  {editingId && <p className="text-sm text-red-500 mb-2">Edit foto tidak diperkenankan untuk mode edit demi menyimpan kuota badnwith server</p>}
+                </div>
+                <div className="flex gap-3 shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(item);
+                      setShowAddForm(false);
+                    }}
+                    className="flex items-center gap-1 text-yellow-500 hover:text-yellow-600"
+                  >
+                    <FiEdit2 /> Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.$id);
+                    }}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-600"
+                  >
+                    <FiTrash2 /> Hapus
+                  </button>
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="mt-4">
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      <input className="w-full border px-2 py-1 rounded" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                      {/* modules={modules} disabled add image for now cuz iam lazy */}
+                      <ReactQuill ref={quilEditRef} theme="snow" value={editContent} onChange={setEditContent} />
+                      <div className="flex gap-2">
+                        <button onClick={handleEditSave} className="bg-green-500 text-white px-3 py-1 rounded">
+                          Simpan
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingId(null);
+                          }}
+                          className="bg-gray-300 px-3 py-1 rounded"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="prose max-w-none mt-2" dangerouslySetInnerHTML={{ __html: item.content }}></div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
+}
+
+const demoUrl = "https://fra.cloud.appwrite.io/v1/storage/buckets/68786dfd0010507fa2df/files/6878b86d000d2e85acf8/view?project=6877342c0034395d4249&mode=admin";
+
+function countArikelLength(string, imagesToreplace) {
+  let newLenght = string;
+
+  for (const item of imagesToreplace) {
+    newLenght = newLenght.replace(item.placeholder, demoUrl);
+  }
+  return newLenght.length;
 }
