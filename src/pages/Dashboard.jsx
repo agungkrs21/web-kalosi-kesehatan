@@ -12,7 +12,7 @@ export default function Dashboard() {
       {/* 🔲 3 Pilihan Menu Utama */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
         <MenuCard title="Media" icon="🎥" link="#media" />
-        <MenuCard title="Edukasi" icon="📚" link="#edukasi" />
+        <MenuCard title="Edukasi" icon="📚" link="/artikel" />
         <MenuCard title="Dialog" icon="💬" link={user.role !== "admin" ? "/chat" : "/admin/chat"} />
       </div>
     </div>

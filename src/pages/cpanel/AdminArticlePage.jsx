@@ -15,8 +15,10 @@ export default function AdminArticlePage() {
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [pendingImages, setPendingImages] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+  const [sortAsc, setSortAsc] = useState(true);
 
-  // quill editor reff
   const quilAddllRef = useRef(null);
   const quilEditRef = useRef(null);
 
@@ -65,11 +67,16 @@ export default function AdminArticlePage() {
     if (!newTitle.trim() || !newContent.trim()) return;
     try {
       let finalContent = newContent;
-      if (finalContent.length > 7000) throw Error("artikel terlalu panjang!!");
+      const photoId = [];
+      const previewUrl = [];
+      if (countArikelLength(finalContent, pendingImages) > 7000) throw Error("Atikel Terlalu panjan");
       for (const item of pendingImages) {
         const uploaded = await storage.createFile(AVATAR_ID, ID.unique(), item.file);
-
         const url = `https://fra.cloud.appwrite.io/v1/storage/buckets/${AVATAR_ID}/files/${uploaded.$id}/view?project=${PROJECT_ID}&mode=admin`;
+
+        // save
+        photoId.push(uploaded.$id);
+        previewUrl.push(url);
 
         finalContent = finalContent.replace(item.placeholder, url);
       }
@@ -77,6 +84,8 @@ export default function AdminArticlePage() {
       await databases.createDocument(DATABASES_ID, ARTIKEL_ID, ID.unique(), {
         title: newTitle,
         content: finalContent,
+        photoId: photoId,
+        previewUrl: previewUrl[0],
       });
       setNewTitle("");
       setNewContent("");
@@ -122,6 +131,17 @@ export default function AdminArticlePage() {
     [editingId]
   );
 
+  const filteredArticles = useMemo(() => {
+    return articles
+      .filter((item) => item.title.toLowerCase().includes(search.toLowerCase()))
+      .filter((item) => (filterDate ? item.$createdAt.split("T")[0] === filterDate : true))
+      .sort((a, b) => {
+        return sortAsc ? new Date(a.$createdAt) - new Date(b.$createdAt) : new Date(b.$createdAt) - new Date(a.$createdAt);
+      });
+  }, [articles, search, filterDate, sortAsc]);
+
+  console.log(filterDate);
+  console.log(articles?.[0]?.$createdAt);
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="flex justify-between items-center mb-6">
@@ -138,12 +158,23 @@ export default function AdminArticlePage() {
         </button>
       </div>
 
+      {/* Search, Filter, Sort Controls */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
+        <input type="text" placeholder="Cari Judul..." value={search} onChange={(e) => setSearch(e.target.value)} className="border px-3 py-2 rounded w-full md:w-1/3" />
+        <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="border px-3 py-2 rounded w-full md:w-1/3" />
+        <button onClick={() => setSortAsc((prev) => !prev)} className="border px-3 py-2 rounded w-full md:w-1/3 hover:bg-gray-100">
+          Sortir Tanggal {sortAsc ? "↑" : "↓"}
+        </button>
+      </div>
+
+      {/* Tambah Artikel Form */}
       {showAddForm && (
         <div className="mb-6 bg-white p-4 rounded shadow space-y-4">
           <h2 className="text-lg font-semibold">Tambah Artikel Baru</h2>
           <strong className="text-gray-400">Max Character Arikel : 6700</strong>
           <br />
-          <strong className={countArikelLength(newContent, pendingImages) > 7000 ? "text-red-400" : "text-gray-400"}>Artikel Character : {countArikelLength(newContent, pendingImages)}</strong> <br />
+          <strong className={countArikelLength(newContent, pendingImages) > 7000 ? "text-red-400" : "text-gray-400"}>Artikel Character : {countArikelLength(newContent, pendingImages)}</strong>
+          <br />
           <input className="w-full border px-2 py-1 rounded" placeholder="Judul Artikel" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
           <ReactQuill ref={quilAddllRef} theme="snow" value={newContent} onChange={setNewContent} modules={modules} />
           <button onClick={handleAddArticle} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
@@ -154,7 +185,7 @@ export default function AdminArticlePage() {
 
       {/* mapping artikle */}
       <div className="space-y-6">
-        {articles.map((item) => {
+        {filteredArticles.map((item) => {
           const isEditing = editingId === item.$id;
 
           return (
@@ -162,7 +193,7 @@ export default function AdminArticlePage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h2 className="text-xl font-bold mb-1">{item.title}</h2>
-                  <p className="text-sm text-gray-500 mb-2">Tanggal: {new Date(item.$createdAt).toLocaleDateString("id-ID")}</p>
+                  <p className="text-sm text-gray-500 mb-2">Tanggal: {formatDate(item.$createdAt)}</p>
                   {editingId && <p className="text-sm text-red-500 mb-2">Edit foto tidak diperkenankan untuk mode edit demi menyimpan kuota badnwith server</p>}
                 </div>
                 <div className="flex gap-3 shrink-0">
@@ -190,28 +221,18 @@ export default function AdminArticlePage() {
 
               {isEditing && (
                 <div className="mt-4">
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <input className="w-full border px-2 py-1 rounded" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                      {/* modules={modules} disabled add image for now cuz iam lazy */}
-                      <ReactQuill ref={quilEditRef} theme="snow" value={editContent} onChange={setEditContent} />
-                      <div className="flex gap-2">
-                        <button onClick={handleEditSave} className="bg-green-500 text-white px-3 py-1 rounded">
-                          Simpan
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingId(null);
-                          }}
-                          className="bg-gray-300 px-3 py-1 rounded"
-                        >
-                          Batal
-                        </button>
-                      </div>
+                  <div className="space-y-2">
+                    <input className="w-full border px-2 py-1 rounded" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                    <ReactQuill ref={quilEditRef} theme="snow" value={editContent} onChange={setEditContent} />
+                    <div className="flex gap-2">
+                      <button onClick={handleEditSave} className="bg-green-500 text-white px-3 py-1 rounded">
+                        Simpan
+                      </button>
+                      <button onClick={() => setEditingId(null)} className="bg-gray-300 px-3 py-1 rounded">
+                        Batal
+                      </button>
                     </div>
-                  ) : (
-                    <div className="prose max-w-none mt-2" dangerouslySetInnerHTML={{ __html: item.content }}></div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -226,9 +247,12 @@ const demoUrl = "https://fra.cloud.appwrite.io/v1/storage/buckets/68786dfd001050
 
 function countArikelLength(string, imagesToreplace) {
   let newLenght = string;
-
   for (const item of imagesToreplace) {
     newLenght = newLenght.replace(item.placeholder, demoUrl);
   }
   return newLenght.length;
+}
+
+function formatDate(string) {
+  return string.split("T")[0];
 }

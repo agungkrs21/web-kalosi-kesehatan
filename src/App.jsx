@@ -13,6 +13,10 @@ import Footer from "./components/Footer";
 import Dashboard from "./pages/Dashboard";
 import UserChatPage from "./pages/UserChatPage";
 import AdminChatPage from "./pages/AdminChatPage";
+import ArtikelPage from "./pages/ArtikelPage";
+
+// Detail Pages
+import ArtikelDetail from "./components/ArtikelDetail";
 
 // admin pages
 import AdminDashBoard from "./pages/cpanel/AdminDashboard";
@@ -34,11 +38,13 @@ const App = () => {
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/chat" element={<UserChatPage />} />
-              <Route path="/admin/chat" element={<AdminChatPage />} />
+              <Route path="/artikel" element={<ArtikelPage />} />
+              <Route path="/artikel/:slug" element={<ArtikelDetail />} />
 
               {/* admin routes */}
               <Route element={<AdminRoutes />}>
                 <Route path="/admin/dashboard" element={<AdminDashBoard />} />
+                <Route path="/admin/chat" element={<AdminChatPage />} />
                 <Route path="/admin/media" element={<AdminMediaPage />} />
                 <Route path="/admin/articles" element={<AdminArticlePage />} />
               </Route>
