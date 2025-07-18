@@ -5,18 +5,10 @@ import ChatBox from "../components/ChatBox";
 import { databases, client, DATABASES_ID, MESSAGES_ID } from "../lib/appwrite";
 import { Query, ID } from "appwrite";
 
-// Dummy data user
-const dummyUsers = [
-  { id: "user1", name: "Agus" },
-  { id: "user2", name: "Rina" },
-  { id: "user3", name: "Budi" },
-];
-
 export default function AdminChatPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [userList, setUserList] = useState([]);
   const [messages, setMessages] = useState([]);
-  const currentAdminId = "admin1"; // Simulasi ID admin login
   const { user } = useAuth();
 
   useEffect(() => {
@@ -27,6 +19,8 @@ export default function AdminChatPage() {
 
   useEffect(() => {
     getListUserMassage();
+
+    //
     const unsubscribe = client.subscribe(`databases.${DATABASES_ID}.collections.${MESSAGES_ID}.documents`, (response) => {
       if (response.events.includes("databases.*.collections.*.documents.*.create")) {
         const msg = response.payload;
@@ -34,6 +28,7 @@ export default function AdminChatPage() {
         // ✅ Hanya update jika berkaitan dengan user saat ini
         if (msg.senderId === user.$id || msg.reciverId === user.$id) {
           setMessages((prev) => [...prev, msg]);
+          getListUserMassage();
         }
       }
       if (response.events.includes("databases.*.collections.*.documents.*.update")) {
@@ -58,6 +53,16 @@ export default function AdminChatPage() {
       unsubscribe();
     };
   }, []);
+
+  const updateMessageStatus = async (id) => {
+    try {
+      await databases.updateDocument(DATABASES_ID, MESSAGES_ID, id, {
+        status: "read",
+      });
+    } catch (error) {
+      console.error("Gagal upadate status pesan:", error);
+    }
+  };
 
   const getListUserMassage = async () => {
     try {
@@ -88,6 +93,13 @@ export default function AdminChatPage() {
         status: "read",
         body,
       });
+
+      //   update message status
+      await Promise.all(selectedUser.msgId.map((id) => updateMessageStatus(id)));
+
+      // reset count
+      setUserList((prev) => prev.map((user) => (user.id === selectedUser.id ? { ...user, count: 0 } : user)));
+      //
     } catch (error) {
       console.error("Gagal kirim pesan:", error);
     }
@@ -124,7 +136,8 @@ export default function AdminChatPage() {
         <ul className="space-y-2">
           {userList.map((user) => (
             <li key={user.id} className={`p-2 rounded cursor-pointer hover:bg-blue-100 ${selectedUser?.id === user.id ? "bg-blue-200" : ""}`} onClick={() => setSelectedUser(user)}>
-              {user.name} <span className="bg-red-600 text-white rounded-full px-2">{user.count}</span>
+              {user.name}
+              {user.count > 0 && <span className="bg-red-600 text-white rounded-full px-2">{user.count}</span>}
             </li>
           ))}
         </ul>
@@ -150,8 +163,9 @@ function makeUserLis(doc) {
   doc.forEach((item) => {
     if (seen[item.username]) {
       seen[item.username] = { ...seen[item.username], count: seen[item.username].count + 1 };
+      seen[item.username].msgId.push(item.$id);
     } else {
-      seen[item.username] = { id: item.senderId, name: item.username, count: 1 };
+      seen[item.username] = { id: item.senderId, name: item.username, count: 1, msgId: [item.$id] };
     }
   });
   for (let item in seen) {

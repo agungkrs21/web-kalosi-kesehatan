@@ -5,6 +5,8 @@ export const MESSAGES_ID = "687837080018ad7ca0a6";
 export const DATABASES_ID = "687836ef003541693df5";
 export const AVATAR_ID = "68786dfd0010507fa2df";
 export const USER_ID = "68786e92000d78a4f58f";
+export const MEDIA_ID = "687a548d002ef292874b";
+export const ARTIKEL_ID = ""
 
 const client = new Client().setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT).setProject(import.meta.env.VITE_APPWRITE_PROJECT_ID);
 

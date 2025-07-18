@@ -44,9 +44,14 @@ export default function Navbar() {
                 <a href="#edukasi" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                   Edukasi
                 </a>
-                <a href="/chat" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                <a href={user.role === "admin" ? "/admin/chat" : "/chat"} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                   Dialog
                 </a>
+                {user.role === "admin" && (
+                  <a href="/admin/dashboard" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                    Admin Panel
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -74,9 +79,15 @@ export default function Navbar() {
         <a href="#edukasi" className="text-gray-600 hover:text-blue-600">
           Edukasi
         </a>
-        <a href="#dialog" className="text-gray-600 hover:text-blue-600">
+        <a href={user.role === "admin" ? "/admin/chat" : "/chat"} className="text-gray-600 hover:text-blue-600">
           Dialog
         </a>
+
+        {user.role === "admin" && (
+          <a href="/admin/dashboard" className="text-gray-600 hover:text-blue-600">
+            Admin Panel
+          </a>
+        )}
       </div>
     </nav>
   );
