@@ -37,9 +37,9 @@ export default function ChatBox({ messages, onSendMessage, onEditMessage, onDele
                   ${isOwn ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-900"}
                   ${isOwn ? "rounded-br-none" : "rounded-bl-none"}`}
                 >
-                  {!isOwn && currentUserData.role === "user" && <p className="text-black/20 border-b-1 text-sm">Dokter boyke</p>}
+                  {!isOwn && currentUserData.role === "user" && <p className="text-black/50 border-b-1 text-sm">Admin</p>}
 
-                  {!isOwn && currentUserData.role === "admin" && <p className="text-black/20 border-b-1 text-sm">{selectedUser.name}</p>}
+                  {!isOwn && currentUserData.role === "admin" && <p className="text-black/50 border-b-1 text-sm">{selectedUser.name}</p>}
                   {isEditing ? (
                     <form
                       onSubmit={(e) => {

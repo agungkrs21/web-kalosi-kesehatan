@@ -11,7 +11,6 @@ export default function Dashboard() {
     loadData(user.$id);
   }, []);
 
-  console.log(totalUnread);
   return (
     <div className="min-h-screen bg-white p-4 space-y-6">
       {/* 🖼️ Slider gambar */}

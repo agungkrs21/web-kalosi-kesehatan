@@ -73,12 +73,14 @@ export default function AdminChatPage() {
     }
   };
   const fetchMessages = async () => {
+    console.log("Fetch baru pesan dipanggil");
     try {
       const res = await databases.listDocuments(DATABASES_ID, MESSAGES_ID, [
         Query.or([Query.equal("senderId", user.$id), Query.equal("reciverId", user.$id)]),
-        Query.orderAsc("$createdAt"), // opsional: urutkan dari lama ke baru
+        Query.orderDesc("$createdAt"), // dari baru ke lama
+        Query.limit(50), // hanya ambil 25 dokumen terbaru
       ]);
-      setMessages(res.documents.filter((msg) => msg.senderId === selectedUser.id || msg.reciverId === selectedUser.id));
+      setMessages(res.documents.filter((msg) => msg.senderId === selectedUser.id || msg.reciverId === selectedUser.id).reverse());
     } catch (error) {
       console.log("Gagal ambil pesan:", error);
     }
@@ -90,7 +92,7 @@ export default function AdminChatPage() {
         senderId: user.$id,
         reciverId: selectedUser.id,
         username: user.name,
-        status: "read",
+        status: "unread",
         body,
       });
 

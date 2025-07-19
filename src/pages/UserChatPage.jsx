@@ -13,11 +13,23 @@ const UserChatPge = () => {
     try {
       const res = await databases.listDocuments(DATABASES_ID, MESSAGES_ID, [
         Query.or([Query.equal("senderId", user.$id), Query.equal("reciverId", user.$id)]),
-        Query.orderAsc("$createdAt"), // opsional: urutkan dari lama ke baru
+        Query.orderDesc("$createdAt"), // dari baru ke lama
+        Query.limit(50), // hanya ambil 25 dokumen terbaru
       ]);
-      setMessages(res.documents);
+      setMessages(res.documents.reverse());
     } catch (error) {
       console.log("Gagal ambil pesan:", error);
+    }
+  };
+
+  // update status pesan yang dibalas
+  const updateMessageStatus = async (id) => {
+    try {
+      await databases.updateDocument(DATABASES_ID, MESSAGES_ID, id, {
+        status: "read",
+      });
+    } catch (error) {
+      console.error("Gagal upadate status pesan:", error);
     }
   };
 
@@ -31,6 +43,8 @@ const UserChatPge = () => {
         status: "unread",
         body,
       });
+
+      await Promise.all(messages.filter((msg) => msg.status === "unread" && msg.senderId !== user.$id).map((msg) => updateMessageStatus(msg.$id)));
     } catch (error) {
       console.error("Gagal kirim pesan:", error);
     }
@@ -91,6 +105,7 @@ const UserChatPge = () => {
     };
   }, []);
   if (user.role !== "user") return <Navigate to="/" />;
+
   return (
     <div className="h-screen bg-white">
       <ChatBox messages={messages} onSendMessage={sendMessage} onEditMessage={editMessage} onDeleteMessage={deleteMessage} currentUserData={user} />
