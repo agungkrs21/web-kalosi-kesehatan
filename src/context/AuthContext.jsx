@@ -68,6 +68,8 @@ export const AuthProvider = ({ children }) => {
         gender: credentials.gender,
         role: credentials.role,
         photoUrl,
+        photoId: uploaded.$id,
+        password: credentials.password,
       });
       localStorage.setItem("userData", JSON.stringify({ userId, ...credentials, photoFile: photoUrl }));
       await getDataFromStorage(setUser, "userData");

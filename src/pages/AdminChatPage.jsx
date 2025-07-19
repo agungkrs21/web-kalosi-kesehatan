@@ -66,7 +66,7 @@ export default function AdminChatPage() {
 
   const getListUserMassage = async () => {
     try {
-      const res = await databases.listDocuments(DATABASES_ID, MESSAGES_ID, [Query.and([Query.equal("reciverId", user.$id), Query.equal("status", "unread")]), Query.orderAsc("$createdAt")]);
+      const res = await databases.listDocuments(DATABASES_ID, MESSAGES_ID, [Query.equal("reciverId", user.$id), Query.equal("status", "unread")]);
       setUserList(makeUserLis(res.documents));
     } catch (error) {
       console.log("gagal mendapatkan pesan user:", error);

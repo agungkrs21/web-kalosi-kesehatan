@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import UserChatPage from "./pages/UserChatPage";
 import AdminChatPage from "./pages/AdminChatPage";
 import ArtikelPage from "./pages/ArtikelPage";
+import MediaEdukasiPage from "./pages/MediaEdukasiPage";
 
 // Detail Pages
 import ArtikelDetail from "./components/ArtikelDetail";
@@ -22,6 +23,7 @@ import ArtikelDetail from "./components/ArtikelDetail";
 import AdminDashBoard from "./pages/cpanel/AdminDashboard";
 import AdminMediaPage from "./pages/cpanel/AdminMediaPage";
 import AdminArticlePage from "./pages/cpanel/AdminArticlePage";
+import AdminUserPage from "./pages/cpanel/AdminUserPage";
 // main app
 const App = () => {
   return (
@@ -40,6 +42,7 @@ const App = () => {
               <Route path="/chat" element={<UserChatPage />} />
               <Route path="/artikel" element={<ArtikelPage />} />
               <Route path="/artikel/:slug" element={<ArtikelDetail />} />
+              <Route path="/media" element={<MediaEdukasiPage />} />
 
               {/* admin routes */}
               <Route element={<AdminRoutes />}>
@@ -47,6 +50,7 @@ const App = () => {
                 <Route path="/admin/chat" element={<AdminChatPage />} />
                 <Route path="/admin/media" element={<AdminMediaPage />} />
                 <Route path="/admin/articles" element={<AdminArticlePage />} />
+                <Route path="/admin/users" element={<AdminUserPage />} />
               </Route>
             </Route>
           </Routes>

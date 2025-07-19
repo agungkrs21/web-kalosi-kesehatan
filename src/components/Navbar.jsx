@@ -38,10 +38,10 @@ export default function Navbar() {
             </button>
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-40 bg-white border shadow-lg rounded-md z-10">
-                <a href="#media" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                <a href="/media" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                   Media
                 </a>
-                <a href="#edukasi" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                <a href="/artikel" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
                   Edukasi
                 </a>
                 <a href={user.role === "admin" ? "/admin/chat" : "/chat"} className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
@@ -73,10 +73,10 @@ export default function Navbar() {
 
       {/* Mobile Nav: stack horizontal */}
       <div className="md:hidden border-t px-4 py-2 flex justify-around text-sm">
-        <a href="#media" className="text-gray-600 hover:text-blue-600">
+        <a href="/media" className="text-gray-600 hover:text-blue-600">
           Media
         </a>
-        <a href="#edukasi" className="text-gray-600 hover:text-blue-600">
+        <a href="/artikel" className="text-gray-600 hover:text-blue-600">
           Edukasi
         </a>
         <a href={user.role === "admin" ? "/admin/chat" : "/chat"} className="text-gray-600 hover:text-blue-600">
