@@ -73,7 +73,6 @@ export default function AdminChatPage() {
     }
   };
   const fetchMessages = async () => {
-    console.log("Fetch baru pesan dipanggil");
     try {
       const res = await databases.listDocuments(DATABASES_ID, MESSAGES_ID, [
         Query.or([Query.equal("senderId", user.$id), Query.equal("reciverId", user.$id)]),

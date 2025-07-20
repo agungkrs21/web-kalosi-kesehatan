@@ -1,15 +1,8 @@
 import { useEffect } from "react";
 import AutoSlider from "../components/AutoSlider";
 import { useAuth } from "../context/AuthContext";
-import useLoadMessage from "../utils/useLoadMessage";
-export default function Dashboard() {
+export default function Dashboard({ totalUnread }) {
   const { user } = useAuth();
-
-  const { loadData, totalUnread } = useLoadMessage();
-
-  useEffect(() => {
-    loadData(user.$id);
-  }, []);
 
   return (
     <div className="min-h-screen bg-white p-4 space-y-6">

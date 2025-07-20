@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 
+// notif ct
+import useLoadMessage from "./utils/useLoadMessage";
 // Auth
 import ProtectedRoutes from "./components/ProtectedRoutes";
 import AdminRoutes from "./components/AdminRoutes";
@@ -26,6 +29,13 @@ import AdminArticlePage from "./pages/cpanel/AdminArticlePage";
 import AdminUserPage from "./pages/cpanel/AdminUserPage";
 // main app
 const App = () => {
+  const { loadData, totalUnread } = useLoadMessage();
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    if (userData) {
+      loadData(userData.$id);
+    }
+  }, []);
   return (
     <div className="relative min-h-screen">
       <Router>
@@ -38,7 +48,7 @@ const App = () => {
 
             {/* secure route */}
             <Route element={<ProtectedRoutes />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Dashboard totalUnread={totalUnread} />} />
               <Route path="/chat" element={<UserChatPage />} />
               <Route path="/artikel" element={<ArtikelPage />} />
               <Route path="/artikel/:slug" element={<ArtikelDetail />} />

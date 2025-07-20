@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { databases, client, DATABASES_ID, MESSAGES_ID } from "../lib/appwrite";
 import { Query } from "appwrite";
+import { sendNotif } from "./sendNotif";
 
 const useLoadMessage = () => {
   const [totalUnread, setTotalUnread] = useState(0);
@@ -32,6 +33,7 @@ const useLoadMessage = () => {
         // ✅ Hanya update jika berkaitan dengan user saat ini
         if (msg.reciverId === userId) {
           setTotalUnread((prev) => prev + 1);
+          sendNotif(`Pesan baru dari: ${msg.username}`, msg.body);
         }
       }
     });
