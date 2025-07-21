@@ -27,8 +27,11 @@ export default function AdminChatPage() {
 
         // ✅ Hanya update jika berkaitan dengan user saat ini
         if (msg.senderId === user.$id || msg.reciverId === user.$id) {
-          setMessages((prev) => [...prev, msg]);
           getListUserMassage();
+          if (msg.senderId === selectedUser?.id) {
+            console.log("sender ngirm pesan di aktive chat");
+            setMessages((prev) => [...prev, msg]);
+          }
         }
       }
       if (response.events.includes("databases.*.collections.*.documents.*.update")) {
@@ -52,7 +55,7 @@ export default function AdminChatPage() {
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [selectedUser]);
 
   const updateMessageStatus = async (id) => {
     try {
@@ -79,7 +82,8 @@ export default function AdminChatPage() {
         Query.orderDesc("$createdAt"), // dari baru ke lama
         Query.limit(50), // hanya ambil 25 dokumen terbaru
       ]);
-      setMessages(res.documents.filter((msg) => msg.senderId === selectedUser.id || msg.reciverId === selectedUser.id).reverse());
+      const activeMsg = res.documents.filter((msg) => msg.senderId === selectedUser.id || msg.reciverId === selectedUser.id).reverse();
+      setMessages(activeMsg);
     } catch (error) {
       console.log("Gagal ambil pesan:", error);
     }
@@ -87,13 +91,24 @@ export default function AdminChatPage() {
 
   const handleSendMessage = async (body) => {
     try {
-      await databases.createDocument(DATABASES_ID, MESSAGES_ID, ID.unique(), {
+      const iduniq = ID.unique();
+      await databases.createDocument(DATABASES_ID, MESSAGES_ID, iduniq, {
         senderId: user.$id,
         reciverId: selectedUser.id,
         username: user.name,
         status: "unread",
         body,
       });
+      const msg = {
+        $id: iduniq,
+        senderId: user.$id,
+        reciverId: selectedUser.id,
+        username: user.name,
+        status: "unread",
+        body,
+        $createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, msg]);
 
       //   update message status
       await Promise.all(selectedUser.msgId.map((id) => updateMessageStatus(id)));
@@ -135,10 +150,10 @@ export default function AdminChatPage() {
       <aside className="w-64 bg-white border-r p-4">
         <h2 className="text-lg font-semibold mb-4">Daftar User</h2>
         <ul className="space-y-2">
-          {userList.map((user) => (
-            <li key={user.id} className={`p-2 rounded cursor-pointer hover:bg-blue-100 ${selectedUser?.id === user.id ? "bg-blue-200" : ""}`} onClick={() => setSelectedUser(user)}>
-              {user.name}
-              {user.count > 0 && <span className="bg-red-600 text-white rounded-full px-2">{user.count}</span>}
+          {userList.map((targerUser) => (
+            <li key={targerUser.id} className={`p-2 rounded cursor-pointer hover:bg-blue-100 ${selectedUser?.id === targerUser.id ? "bg-blue-200" : ""}`} onClick={() => setSelectedUser(targerUser)}>
+              {targerUser.name}
+              {targerUser.count > 0 && <span className="bg-red-600 text-white rounded-full px-2">{targerUser.count}</span>}
             </li>
           ))}
         </ul>

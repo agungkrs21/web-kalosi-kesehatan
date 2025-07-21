@@ -1,9 +1,25 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 export default function Navbar() {
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { user, handleLogout } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      const trimmed = search.trim();
+      if (trimmed) {
+        navigate(`/artikel?search=${encodeURIComponent(trimmed)}`);
+      } else {
+        // kosongkan search param
+        navigate("/artikel");
+      }
+    }
+  };
 
   if (!user) return null;
   return (
@@ -25,6 +41,7 @@ export default function Navbar() {
             placeholder="Cari artikel edukasi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="w-full border border-gray-300 rounded-full px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
